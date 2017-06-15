@@ -1,4 +1,4 @@
-
+--[[ No need for this, for now...
 local C     = require 'pl.comprehension' . new()
 local class = require 'pl.class'
 
@@ -77,6 +77,60 @@ end
 --- Transform pattern into an equivalent, with only top-level Either.
 function Pattern:either()
 end
+--]]
+
+--------------------------------------------------------------------------------
+local docopt = {
+	VERSION = "0.0.1",
+	errors = {},
+}
+
+-- Parser errors
+local re = require 'relabel'
+
+local parseErrors = {}
+parseErrors[0] = "PEG couldn't parse"
+parseErrors.PegError = 0
+local function addError(label, msg)
+	table.insert(parseErrors, msg)
+	parseErrors[label] = #parseErrors
+	docopt.errors[label] = msg
+end
+addError("MissingUsage", [["usage:" (case insensitive) not found]])
+addError("MuchUsage", [[More than one "usage:" (case insensitive) found]])
+addError("ProgramMismatch", [[Program name mismatch between usages]])
+addError("MissingProgram", [[Program name not found after "usage:" (case insensitive)]])
+re.setlabels(parseErrors)
+
+
+local grammar = re.compile[[
+Docopt <- {| NoUsage (Usage / %{MissingUsage}) {:usage: Patterns :} NoUsage |} (!. / %{MuchUsage})
+
+Usage <- [Uu][Ss][Aa][Gg][Ee]":"
+Patterns <- Sp ({:program: [_%w.%-]+ :} / %{MissingProgram}) Sp {| Pattern
+            (%nl Sp =program (%s+ Pattern)?)* |}
+			(((%nl Sp (%nl / !.)) / !.) / %{ProgramMismatch})
+Pattern <- UntilEOL
+
+NoUsage <- (!Usage .)*
+-- NoUsage <- (!Usage (Option / .)*
+-- Option <- {| ShortOption " " LongOption / ShortOption / LongOption |} (("  " / "\t") UntilEOL)?
+
+UntilEOL <- [^%nl]*
+Sp <- (!%nl %s)*
+S <- %s*
+]]
+
+function docopt.parse(doc)
+	local res, label, suf = grammar:match(doc)
+	if res then
+		return res
+	else
+		local whereErr = #doc - #suf
+		local lin, col = re.calcline(doc, whereErr)
+		return nil, string.format("%s at %d:%d", parseErrors[label], lin, col)
+	end
+end
 
 
 --- Process command-line arguments based on help string.
@@ -98,13 +152,21 @@ end
 -- doc_string and exit if '-h' or '--help' is the only command-line
 -- argument.  If default_help is false, docopt() will just return
 -- normally with the '-h' option set to true.
+--
 -- @return A table with all the arguments as string keys if the use of the
 -- arguments is valid.
-local function docopt(help_message, arg_list, version, default_help)
+function docopt.docopt(doc, args, help, version, options_first)
+	assert(doc, "[docopt] Missing required argument 'doc'")
+	-- Arguments can be passed in as a table, for keyword args
+	if type(args) == "table" then
+		options_first = args.options_first
+		version = args.version
+		help = args.help
+		args = args.args
+	end
+	args = args or arg
+	return parse(doc)
 end
 
 
-return {
-    docopt = docopt,
-    Pattern = Pattern,
-}
+return docopt

@@ -1,3 +1,7 @@
+docopt.lua
+==========
+[![Build Status](https://travis-ci.org/gilzoide/docopt.lua.svg?branch=master)](https://travis-ci.org/gilzoide/docopt.lua)
+
 # Work In Progress
 
 This code is still under development, and doesn't work yet.
