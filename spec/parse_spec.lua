@@ -29,28 +29,52 @@ end
 
 
 describe("Doc parsing", function()
-	describe("#success", function()
-		describe("#usage", function()
-			test_all{
+	describe("#usage #success", function()
+		test_all{
 {[[usage: prog]]},
+{[[usage:
+  prog]]},
 {[[usage: prog <arg>]]},
 {[[usage:     with_spaces
               with_spaces]]},
 {[[usage:	with_tabs
 			with_tabs]]},
+{[[There may be text in the same line before Usage: prog]]},
 {[[After some text, it works:
 Usage: prog]]},
 {[[Doesn't matter the CaSe:
 uSaGe: prog]]},
-			}
-		end)
+{[[Usage: prog [options]
+
+-o --output  Output file [default: a.out]
+-h --help]]},
+		}
 	end)
 
-	describe("#error", function()
-		describe("#usage", function()
-			test_all{
-{"there's no use", "MissingUsage"},
-			}
-		end)
+	describe("#usage #error", function()
+		test_all{
+{[[there's no use]], "MissingUsage"},
+{[[No spaces after usage :]], "MissingUsage"},
+{[[there has to be the program name
+usage:]], "MissingProgram"},
+{[[there must be consistency in the program name
+usage: prog
+       no-prog]], "ProgramMismatch"},
+{[[usage: prog
+
+Cannot have another usage:]], "MuchUsage"},
+		}
+	end)
+
+	describe("#option #error", function()
+		test_all{
+{[[usage: ambiguous-options
+
+-o
+-o]], "AmbiguousOption"},
+{[[usage: 3options
+
+-o --out ---output]], "InvalidArgument"},
+		}
 	end)
 end)

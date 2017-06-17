@@ -1,29 +1,35 @@
-docopt.lua
-==========
+# docopt.lua
+
 [![Build Status](https://travis-ci.org/gilzoide/docopt.lua.svg?branch=master)](https://travis-ci.org/gilzoide/docopt.lua)
 
-# Work In Progress
+# What works
 
-This code is still under development, and doesn't work yet.
+- [ ] Help message parsing
+- [ ] Command line parsing
 
 # Lua Port of the docopt Command Line Processor
 
 [docopt](http://docopt.org) creates _beautiful_ command-line interfaces.
 
-docopt is a parser for program command line help messages.  It will use
-the help message itself to validate the arguments passed into the
-program.  And from that it will generate a handy table of the
-arguments.  Create the nicely formatted help message, and then let
-docopt take care of the rest!
+docopt is a parser for program command line help messages. It will use the
+help message itself to validate the arguments passed into the program, and from
+that it will generate a handy table of the arguments. Create the nicely
+formatted help message and then let docopt take care of the rest!
 
 This is the [Lua](http://www.lua.org) port of the original Python
 implementation.
 
+# Installation
+
+Install using [LuaRocks](https://luarocks.org/):
+
+	$ luarocks make
+
+or just put the `docopt.lua` file in your Lua modules search path.
+
 # Basic Usage
 
-Put the docopt.lua file in your Lua modules search path.
-
-Then in your main code (in this case `simple_find.lua`) put:
+In your main code (in this case `simple_find.lua`) put:
 
 ```lua
 local DOC = require 'docopt'  -- Any local name is fine.
@@ -32,8 +38,10 @@ local argument_help = [[
 Simple Find Command.
 
 Usage:
-  simple_find.lua dir [<dirname>]
-  simple_find.lua file [filename]
+  simple_find.lua [-r] dir [<dirname>]
+  simple_find.lua [-r] file [<filename>]
+  simple_find.lua (-h | --help)
+  simple_find.lua --version
 
 Options:
   -h --help         Show this screen.
@@ -41,20 +49,26 @@ Options:
   -r --recursive    Recursively search subdirectories too.
 ]]
 
-local processed_args = DOC.docopt(argument_help, arg)
+local processed_args, err = DOC.docopt(argument_help)  -- Parse `arg` by default
+assert(processed_args, err)  -- docopt returns meaningful error messages
 
-if processsed_args.dir then
+if processed_args["<dirname>"] then
     -- Directory name search
-elseif processsed_args.file then
+elseif processed_args["<filename>"] then
     -- File name search
 end
 ```
 
-
 # Dependencies
 
-docopt.lua does not require any external libraries, and is compatible
-with Lua 5.1 and 5.2.
+docopt.lua requires [LPegLabel](https://github.com/sqmedeiros/lpeglabel/), and
+is compatible with Lua 5.1, 5.2 and 5.3.
+
+# Testing
+
+Run automated tests using [busted](http://olivinelabs.com/busted/):
+
+	$ busted
 
 # Copyright and License
 
@@ -62,7 +76,8 @@ This project is distributed under the
 [MIT License](http://www.opensource.org/licenses/mit-license.html), 
 reproduced below:
 ```
-Copyright (c) 2012 Vladimir Keleshev <vladimir@keleshev.com>, 
+Copyright (c) 2017 Gil Barbosa Reis <gilzoide@gmail.com>,
+              2012 Vladimir Keleshev <vladimir@keleshev.com>, 
                    James Graves <james.c.graves.jr@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a

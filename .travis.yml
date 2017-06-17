@@ -13,8 +13,8 @@ before_install:
   - source env/bin/activate
   - luarocks install busted
 
-# install:
-  # - luarocks make
+install:
+  - luarocks make
 
 script:
   - busted
